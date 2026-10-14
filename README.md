@@ -26,3 +26,13 @@ npm run test:e2e
 
 Reports in `reports/`: `cucumber.html` (open in a browser), `cucumber.json`, `junit.xml`.
 In GitHub Actions the summary is on the run page and the files are in the `e2e-report` artifact.
+
+## Configuration
+
+| Name | Where (GitHub) | Purpose |
+|---|---|---|
+| `POLLAR_DEV_PAT` | Secret | Dashboard token (no app restriction) |
+| `E2E_HUB_URL` | Variable | Dashboard API, default `https://hub-api.pollar.dev` |
+| `E2E_SDK_URL` | Variable | SDK API, default `https://sdk-api.pollar.dev` |
+
+Locally the same names go in `.env`.
