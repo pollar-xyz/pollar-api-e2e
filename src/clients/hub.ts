@@ -3,6 +3,8 @@
 
 export type HubApp = { id: string; name: string; network: string };
 export type RampProvider = { id: string; name: string; network: string };
+export type AppUser = { id: string; providers: string[]; wallets: Array<{ network: string; public_key: string }> };
+export type AppWallet = { public_key: string; network: string; type: string };
 
 export function hubClient(baseUrl: string, pat: string) {
   async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -26,6 +28,8 @@ export function hubClient(baseUrl: string, pat: string) {
         // Node sends no Origin header, like a mobile client.
         allow_native_clients: true,
       }),
+    listUsers: async (appId: string) => (await call<{ items: AppUser[] }>('GET', `/applications/${appId}/users`)).items,
+    listWallets: async (appId: string) => (await call<{ items: AppWallet[] }>('GET', `/applications/${appId}/wallets`)).items,
     /** The global catalog: every ramp provider registered in this environment. */
     rampCatalog: async () => (await call<{ providers: RampProvider[] }>('GET', '/ramp-providers')).providers,
     enableRampProvider: (appId: string, rampProviderId: string) =>
