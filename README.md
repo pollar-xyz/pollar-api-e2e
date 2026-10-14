@@ -16,6 +16,9 @@ scripts/summary.ts   Markdown summary of the run for GitHub
 
 Each scenario creates its own app and archives it when it ends. No ramp order is created.
 
+Ramps run one scenario per provider. A provider not registered for the app network in `.dev`
+is reported as skipped, with the reason, instead of failing.
+
 ## Run
 
 ```sh

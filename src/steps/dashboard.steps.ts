@@ -46,3 +46,21 @@ Given('the app enables every ramp provider registered for its network', async fu
     this.log(`enabled ${p.name}`);
   }
 });
+
+Given('the {string} ramp provider is registered for the app network', async function (this: E2EWorld, name: string) {
+  const network = this.requireApp().network;
+  const catalog = await this.hub.rampCatalog();
+  this.provider = catalog.find((p) => p.name === name && p.network === network);
+  if (!this.provider) {
+    const found = catalog.filter((p) => p.name === name).map((p) => p.network);
+    // Not a failure of the platform: this environment has no such provider yet.
+    this.log(`skipped: ${name} is not registered for ${network} here${found.length ? ` (only ${found.join(', ')})` : ''}`);
+    return 'skipped';
+  }
+});
+
+Given('the app enables the {string} ramp provider', async function (this: E2EWorld, name: string) {
+  const provider = this.requireProvider();
+  assert.equal(provider.name, name);
+  await this.hub.enableRampProvider(this.requireApp().id, provider.id);
+});
