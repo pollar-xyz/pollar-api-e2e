@@ -1,0 +1,43 @@
+name: E2E
+
+# Cucumber scenarios against the test environment (*.pollar.dev). The report is
+# on the run page (summary) and in the e2e-report artifact (HTML, JSON, JUnit).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 10 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:e2e
+        env:
+          POLLAR_DEV_PAT: ${{ secrets.POLLAR_DEV_PAT }}
+      - if: always()
+        run: npm run report:summary
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-report
+          path: reports/
+          if-no-files-found: ignore
