@@ -8,7 +8,7 @@ scenarios and run against the test environment (`*.pollar.dev` only).
 ```
 features/            scenarios in plain language (Gherkin)
 src/config/env.ts    run settings; refuses any host that is not *.pollar.dev
-src/clients/         dashboard API (hub-api, PAT) and the published SDK (@pollar/core)
+src/clients/         dashboard API (hub-api, PAT), the published SDK (@pollar/core), Horizon testnet (read-only)
 src/support/         per-scenario state (World) and cleanup hooks
 src/steps/           step definitions, one file per feature
 scripts/summary.ts   Markdown summary of the run for GitHub

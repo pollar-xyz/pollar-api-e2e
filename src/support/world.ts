@@ -11,6 +11,7 @@ export class E2EWorld extends World {
   provider?: RampProvider;
   sdk?: PollarClient;
   walletAddress?: string;
+  appWalletAddress?: string;
   countries: Array<{ code: string; currency: string | null }> = [];
 
   constructor(options: IWorldOptions) {

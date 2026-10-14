@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { Then } from '@cucumber/cucumber';
+import { Given, Then, When } from '@cucumber/cucumber';
+import { testnetAccount } from '../clients/horizon.js';
 import type { E2EWorld } from '../support/world.js';
 
 Then("the SDK reports that Stellar wallet as the user's wallet", function (this: E2EWorld) {
@@ -29,4 +30,34 @@ Then('the dashboard lists that wallet for the app', async function (this: E2EWor
   const wallet = wallets.find((w) => w.public_key === address);
   assert.ok(wallet, `${address} is not among the app wallets`);
   assert.equal(wallet.type, 'sdk_user');
+});
+
+Given("the app's own wallet is funded by the testnet friendbot", async function (this: E2EWorld) {
+  const app = this.requireApp();
+  const own = await this.hub.appWallet(app.id);
+  await this.hub.fundWithTestnetFriendbot(app.id, own.public_key);
+  this.appWalletAddress = own.public_key;
+  this.log(`app wallet ${own.public_key} funded`);
+});
+
+When('the user creates their Stellar account through the SDK', async function (this: E2EWorld) {
+  const outcome = await this.requireSdk().createAccount();
+  assert.equal(outcome.status, 'success', `createAccount ended ${JSON.stringify(outcome)}`);
+  this.log(`createAccount tx ${outcome.hash}`);
+});
+
+Then('the SDK reports the account on the ledger with an XLM balance', async function (this: E2EWorld) {
+  const address = this.requireWalletAddress();
+  const balance = await this.requireSdk().getWalletBalance(address);
+  assert.equal(balance.exists, true, `${address} is not on the ledger`);
+  const xlm = balance.balances.find((b) => b.type === 'native');
+  assert.ok(xlm, 'no XLM balance reported');
+  this.log(`XLM balance ${xlm.balance} on ${balance.network}`);
+});
+
+Then("the account is sponsored by the app's wallet on Stellar testnet", async function (this: E2EWorld) {
+  const address = this.requireWalletAddress();
+  const account = await testnetAccount(address);
+  assert.ok(account, `${address} is not on Stellar testnet`);
+  assert.equal(account.sponsor, this.appWalletAddress, 'the account reserve is not sponsored by the app wallet');
 });
