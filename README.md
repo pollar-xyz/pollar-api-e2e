@@ -32,10 +32,12 @@ In GitHub Actions the summary is on the run page and the files are in the `e2e-r
 
 ## Configuration
 
-| Name | Where (GitHub) | Purpose |
-|---|---|---|
-| `POLLAR_DEV_PAT` | Secret | Dashboard token (no app restriction) |
-| `E2E_HUB_URL` | Variable | Dashboard API, default `https://hub-api.pollar.dev` |
-| `E2E_SDK_URL` | Variable | SDK API, default `https://sdk-api.pollar.dev` |
+| Name                 | Where (GitHub)      | Purpose                                                       |
+| -------------------- | ------------------- | ------------------------------------------------------------- |
+| `POLLAR_DEV_PAT`     | Secret              | Dashboard token (no app restriction)                          |
+| `E2E_HUB_URL`        | Variable            | Dashboard API, default `https://hub-api.pollar.dev`           |
+| `E2E_SDK_URL`        | Variable            | SDK API, default `https://sdk-api.pollar.dev`                 |
+| `POLLAR_SDK_VERSION` | Variable (optional) | `@pollar/core` version or dist-tag CI tests, default `latest` |
 
-Locally the same names go in `.env`.
+Locally the same names go in `.env`. Locally the SDK is the one pinned in `package-lock.json`; CI
+installs `latest` (or the version above) on top of it. A manual run can also pick a version.
