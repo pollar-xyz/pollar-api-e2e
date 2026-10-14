@@ -44,7 +44,8 @@ for (const feature of features) {
   }
 }
 
-const title = `### E2E against pollar.dev: ${count.passed} passed, ${count.failed} failed, ${count.skipped} skipped`;
+const sdkVersion = (JSON.parse(readFileSync('node_modules/@pollar/core/package.json', 'utf8')) as { version: string }).version;
+const title = `### E2E against pollar.dev with @pollar/core ${sdkVersion}: ${count.passed} passed, ${count.failed} failed, ${count.skipped} skipped`;
 const md = [title, '', ...lines].join('\n');
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
 else console.log(md);

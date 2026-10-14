@@ -10,6 +10,10 @@ on:
   schedule:
     - cron: '0 10 * * 1-5'
   workflow_dispatch:
+    inputs:
+      sdk_version:
+        description: '@pollar/core version or dist-tag to test (default: latest)'
+        required: false
 
 permissions:
   contents: read
@@ -29,6 +33,12 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # Test the SDK as published now, not the one pinned in the lockfile.
+      # Order: manual input, then the POLLAR_SDK_VERSION repo variable, then latest.
+      - name: Install @pollar/core under test
+        run: npm install --no-save "@pollar/core@${SDK_VERSION:-latest}"
+        env:
+          SDK_VERSION: ${{ inputs.sdk_version || vars.POLLAR_SDK_VERSION }}
       - run: npm run typecheck
       - run: npm run test:e2e
         env:
