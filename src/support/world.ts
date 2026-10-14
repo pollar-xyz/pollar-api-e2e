@@ -10,6 +10,7 @@ export class E2EWorld extends World {
   apiKey?: string;
   provider?: RampProvider;
   sdk?: PollarClient;
+  walletAddress?: string;
   countries: Array<{ code: string; currency: string | null }> = [];
 
   constructor(options: IWorldOptions) {
@@ -24,6 +25,11 @@ export class E2EWorld extends World {
   requireProvider(): RampProvider {
     if (!this.provider) throw new Error('no ramp provider: a previous step failed');
     return this.provider;
+  }
+
+  requireWalletAddress(): string {
+    if (!this.walletAddress) throw new Error('no wallet: a previous step failed');
+    return this.walletAddress;
   }
 
   requireSdk(): PollarClient {
