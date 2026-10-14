@@ -1,0 +1,24 @@
+{
+  "name": "pollar-api-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test:e2e": "node --env-file-if-exists=.env --import tsx node_modules/@cucumber/cucumber/bin/cucumber.js",
+    "report:summary": "node --import tsx scripts/summary.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pollar/core": "0.11.5",
+    "@stellar/stellar-sdk": "^16.0.1"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "13.2.1",
+    "@types/node": "24.13.2",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
