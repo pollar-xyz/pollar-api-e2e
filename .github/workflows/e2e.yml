@@ -33,6 +33,8 @@ jobs:
       - run: npm run test:e2e
         env:
           POLLAR_DEV_PAT: ${{ secrets.POLLAR_DEV_PAT }}
+          E2E_HUB_URL: ${{ vars.E2E_HUB_URL }}
+          E2E_SDK_URL: ${{ vars.E2E_SDK_URL }}
       - if: always()
         run: npm run report:summary
       - uses: actions/upload-artifact@v4
