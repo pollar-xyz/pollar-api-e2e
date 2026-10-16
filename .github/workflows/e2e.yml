@@ -55,7 +55,7 @@ jobs:
         if: ${{ inputs.sdk_ref }}
         working-directory: sdk
         run: |
-          npm ci
+          npm install --no-audit --no-fund
           npm run build -w @pollar/core
           npm pack -w @pollar/core --pack-destination ..
       - if: ${{ inputs.sdk_ref }}
