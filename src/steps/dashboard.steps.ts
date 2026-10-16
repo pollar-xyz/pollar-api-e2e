@@ -5,6 +5,8 @@ import type { E2EWorld } from '../support/world.js';
 
 async function createApp(world: E2EWorld) {
   world.app = await world.hub.createApp(`e2e-${config.runId}`);
+  // Nothing here may run on mainnet, in dev or in prod. The After hook archives it.
+  assert.equal(world.app.network, 'testnet', `new apps must start on testnet, got ${world.app.network}`);
 }
 
 async function createKey(world: E2EWorld) {

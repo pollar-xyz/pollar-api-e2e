@@ -1,6 +1,6 @@
 // Turns reports/cucumber.json into a Markdown summary (scenario by scenario,
 // its notes, the failing step and its error) for the GitHub run page.
-import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 type Embedding = { data: string; mime_type: string };
 type Step = { keyword: string; name?: string; embeddings?: Embedding[]; result: { status: string; error_message?: string } };
@@ -45,7 +45,12 @@ for (const feature of features) {
 }
 
 const sdkVersion = (JSON.parse(readFileSync('node_modules/@pollar/core/package.json', 'utf8')) as { version: string }).version;
-const title = `### E2E against pollar.dev with @pollar/core ${sdkVersion}: ${count.passed} passed, ${count.failed} failed, ${count.skipped} skipped`;
+const envName = process.env.E2E_ENV ?? 'dev';
+const title = `### E2E on ${envName} with @pollar/core ${sdkVersion}: ${count.passed} passed, ${count.failed} failed, ${count.skipped} skipped`;
 const md = [title, '', ...lines].join('\n');
+const failedScenarios = features.flatMap((f) =>
+  f.elements.filter((s) => s.steps.some((st) => st.result.status === 'failed')).map((s) => `${f.name}: ${s.name}`),
+);
+writeFileSync('reports/counts.json', JSON.stringify({ env: envName, sdk: sdkVersion, ...count, failedScenarios }));
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
 else console.log(md);
