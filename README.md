@@ -41,3 +41,7 @@ In GitHub Actions the summary is on the run page and the files are in the `e2e-r
 
 Locally the same names go in `.env`. Locally the SDK is the one pinned in `package-lock.json`; CI
 installs `latest` (or the version above) on top of it. A manual run can also pick a version.
+
+Release candidates: a manual run with `sdk_ref` (a tag or branch of `pollar-xyz/pollar`, for example
+`v0.12.0-rc.1`) builds `@pollar/core` from that ref instead of installing it from npm. The SDK repo
+starts this run when an `v*-rc*` tag is pushed.
