@@ -1,7 +1,11 @@
 name: E2E
+run-name: E2E ${{ inputs.sdk_ref || inputs.sdk_version || '' }}
 
-# Cucumber scenarios against the test environment (*.pollar.dev). The report is
-# on the run page (summary) and in the e2e-report artifact (HTML, JSON, JUnit).
+# Cucumber scenarios against dev (*.pollar.dev) and prod (*.pollar.xyz), in
+# parallel. Every app they create is on testnet. Each environment is a GitHub
+# environment with its own E2E_HUB_URL, E2E_SDK_URL and POLLAR_PAT. The run
+# page has one summary per environment plus a combined table; the reports are
+# in the e2e-report-<env> artifacts (HTML, JSON, JUnit).
 
 on:
   push:
@@ -14,18 +18,33 @@ on:
       sdk_version:
         description: '@pollar/core version or dist-tag to test (default: latest)'
         required: false
+      sdk_ref:
+        description: 'Git tag or branch of pollar-xyz/pollar to build @pollar/core from (for example v0.12.0-rc.1). Overrides sdk_version.'
+        required: false
+      environments:
+        description: 'Environments to test'
+        type: choice
+        options: [dev and prod, dev, prod]
+        default: dev and prod
 
 permissions:
   contents: read
 
 concurrency:
-  group: e2e-${{ github.ref }}
+  group: e2e-${{ github.ref }}-${{ inputs.sdk_ref || inputs.sdk_version || 'default' }}
   cancel-in-progress: false
 
 jobs:
   e2e:
+    name: e2e (${{ matrix.env }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # Pull requests and pushes test dev only; prod is for releases, manual runs and the daily run.
+        env: ${{ fromJSON(contains(fromJSON('["pull_request","push"]'), github.event_name) && '["dev"]' || (inputs.environments == 'dev' && '["dev"]' || (inputs.environments == 'prod' && '["prod"]' || '["dev","prod"]'))) }}
+    environment: ${{ matrix.env }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,20 +55,62 @@ jobs:
       # Test the SDK as published now, not the one pinned in the lockfile.
       # Order: manual input, then the POLLAR_SDK_VERSION repo variable, then latest.
       - name: Install @pollar/core under test
+        if: ${{ !inputs.sdk_ref }}
         run: npm install --no-save "@pollar/core@${SDK_VERSION:-latest}"
         env:
           SDK_VERSION: ${{ inputs.sdk_version || vars.POLLAR_SDK_VERSION }}
+      # A release candidate: build @pollar/core from the SDK repo at that tag.
+      - if: ${{ inputs.sdk_ref }}
+        uses: actions/checkout@v4
+        with:
+          repository: pollar-xyz/pollar
+          ref: ${{ inputs.sdk_ref }}
+          path: sdk
+      - name: Build @pollar/core from ${{ inputs.sdk_ref }}
+        if: ${{ inputs.sdk_ref }}
+        working-directory: sdk
+        # npm ci rejects the SDK lockfile under npm 11; this checkout is thrown away.
+        run: |
+          npm install --no-audit --no-fund
+          npm run build -w @pollar/core
+          npm pack -w @pollar/core --pack-destination ..
+      - if: ${{ inputs.sdk_ref }}
+        run: npm install --no-save ./pollar-core-*.tgz
       - run: npm run typecheck
       - run: npm run test:e2e
         env:
-          POLLAR_DEV_PAT: ${{ secrets.POLLAR_DEV_PAT }}
+          POLLAR_PAT: ${{ secrets.POLLAR_PAT }}
           E2E_HUB_URL: ${{ vars.E2E_HUB_URL }}
           E2E_SDK_URL: ${{ vars.E2E_SDK_URL }}
       - if: always()
         run: npm run report:summary
+        env:
+          E2E_ENV: ${{ matrix.env }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: e2e-report
+          name: e2e-report-${{ matrix.env }}
           path: reports/
           if-no-files-found: ignore
+
+  report:
+    needs: e2e
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: e2e-report-*
+      - name: Combined summary
+        run: |
+          {
+            echo "### E2E by environment: ${{ needs.e2e.result }}"
+            echo
+            echo "| Environment | @pollar/core | Passed | Failed | Skipped | Failed scenarios |"
+            echo "|---|---|---|---|---|---|"
+            for f in e2e-report-*/counts.json; do
+              [ -f "$f" ] && jq -r '"| \(.env) | \(.sdk) | \(.passed) | \(.failed) | \(.skipped) | \(.failedScenarios | join("<br>")) |"' "$f"
+            done
+            echo
+            echo "An environment missing from the table did not reach the tests; see its job."
+          } >> "$GITHUB_STEP_SUMMARY"
