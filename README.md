@@ -39,9 +39,9 @@ Per GitHub environment (`dev`, `prod`):
 
 | Name          | Where (GitHub) | dev                             | prod                          |
 | ------------- | -------------- | ------------------------------- | ----------------------------- |
-| `POLLAR_PAT`  | Secret         | token from dashboard.pollar.dev | token from the prod dashboard |
-| `E2E_HUB_URL` | Variable       | `https://hub-api.pollar.dev`    | `https://hub.api.pollar.xyz`  |
-| `E2E_SDK_URL` | Variable       | `https://sdk-api.pollar.dev`    | `https://sdk.api.pollar.xyz`  |
+| `POLLAR_PAT`  | Secret         | token from dashboard.dev.pollar.dev| token from the prod dashboard |
+| `E2E_HUB_URL` | Variable       | `https://hub.api.dev.pollar.dev`    | `https://hub.api.pollar.xyz`  |
+| `E2E_SDK_URL` | Variable       | `https://sdk.api.dev.pollar.dev`    | `https://sdk.api.pollar.xyz`  |
 
 The token is a dashboard Personal Access Token with no app restriction. Repository variable
 `POLLAR_SDK_VERSION` (optional): `@pollar/core` version or dist-tag CI tests, default `latest`.
