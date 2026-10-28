@@ -10,6 +10,7 @@ export function hubClient(baseUrl: string, pat: string) {
   async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
     const res = await fetch(`${baseUrl}/v1${path}`, {
       method,
+      redirect: 'error', // a moved host must fail, never follow dev into prod
       headers: { Authorization: `Bearer ${pat}`, 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
