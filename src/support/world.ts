@@ -4,6 +4,8 @@ import { config } from '../config/env.js';
 import { hubClient, type HubApp, type RampProvider } from '../clients/hub.js';
 import type { PollarClient } from '../clients/sdk.js';
 
+type RampRoute = Awaited<ReturnType<PollarClient['getRampRoutes']>>['routes'][number];
+
 export class E2EWorld extends World {
   readonly hub = hubClient(config.hubUrl, config.pat);
   app?: HubApp;
@@ -13,6 +15,7 @@ export class E2EWorld extends World {
   walletAddress?: string;
   appWalletAddress?: string;
   countries: Array<{ code: string; currency: string | null }> = [];
+  routes: Record<'ONRAMP' | 'OFFRAMP', RampRoute[]> = { ONRAMP: [], OFFRAMP: [] };
 
   constructor(options: IWorldOptions) {
     super(options);
