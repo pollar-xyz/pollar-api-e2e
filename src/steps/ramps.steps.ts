@@ -48,7 +48,13 @@ Then(
         this.log(`${label}: ${own[0].amountIn} in → ${own[0].amountOut} out via ${fiat.rail}`);
       } catch (e) {
         // A quote that found no route says why each route dropped out.
-        const rejected = (e as { body?: { rejected?: unknown } }).body?.rejected;
+        const rejected = (e as { body?: { rejected?: Array<{ failure: { code: string } }> } }).body?.rejected;
+        // New apps ramp only in COSIGNED mode and only a Pollar admin enables EXTERNAL,
+        // so an external wallet's offramp reaching the provider and stopping there is expected.
+        if (direction === 'OFFRAMP' && rejected?.length && rejected.every((r) => r.failure.code === 'SIGNING_MODE_NOT_ALLOWED')) {
+          this.log(`${label}: refused SIGNING_MODE_NOT_ALLOWED (external wallet, app allows COSIGNED only)`);
+          continue;
+        }
         failures.push(`${label}: ${(e as Error).message}${rejected ? ` ${JSON.stringify(rejected)}` : ''}`);
       }
     }
