@@ -45,6 +45,8 @@ export async function loginWithNewWallet(baseUrl: string, apiKey: string) {
     storage: sdk.createMemoryAdapter(),
     walletAdapters: [wallet],
   } as ConstructorParameters<typeof sdk.PollarClient>[0]);
+  // The user approves every signing prompt, as they would by tapping Confirm.
+  client.onConfirmationRequest((pending) => pending.forEach((p) => p.confirm()));
   await client.ready();
   const state = await new Promise<AuthState>((resolve) => {
     const stop = client.onAuthStateChange((s) => {
