@@ -55,5 +55,5 @@ export async function loginWithNewWallet(baseUrl: string, apiKey: string) {
     });
     client.login({ provider: wallet.type });
   });
-  return { client, address: keypair.publicKey(), state };
+  return { client, address: keypair.publicKey(), keypair, state };
 }

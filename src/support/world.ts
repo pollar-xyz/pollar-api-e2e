@@ -1,5 +1,6 @@
 // State shared by the steps of one scenario. Each scenario gets a new World.
 import { setWorldConstructor, World, type IWorldOptions } from '@cucumber/cucumber';
+import type { Keypair } from '@stellar/stellar-sdk';
 import { config } from '../config/env.js';
 import { hubClient, type HubApp, type RampProvider } from '../clients/hub.js';
 import type { PollarClient } from '../clients/sdk.js';
@@ -13,6 +14,7 @@ export class E2EWorld extends World {
   provider?: RampProvider;
   sdk?: PollarClient;
   walletAddress?: string;
+  walletKeypair?: Keypair;
   appWalletAddress?: string;
   countries: Array<{ code: string; currency: string | null }> = [];
   routes: Record<'ONRAMP' | 'OFFRAMP', RampRoute[]> = { ONRAMP: [], OFFRAMP: [] };
@@ -34,6 +36,11 @@ export class E2EWorld extends World {
   requireWalletAddress(): string {
     if (!this.walletAddress) throw new Error('no wallet: a previous step failed');
     return this.walletAddress;
+  }
+
+  requireWalletKeypair(): Keypair {
+    if (!this.walletKeypair) throw new Error('no wallet keypair: a previous step failed');
+    return this.walletKeypair;
   }
 
   requireSdk(): PollarClient {

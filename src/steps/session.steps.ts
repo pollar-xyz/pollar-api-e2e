@@ -6,10 +6,11 @@ import type { E2EWorld } from '../support/world.js';
 
 async function login(world: E2EWorld) {
   if (!world.apiKey) throw new Error('no api key: a previous step failed');
-  const { client, address, state } = await loginWithNewWallet(config.sdkUrl, world.apiKey);
+  const { client, address, keypair, state } = await loginWithNewWallet(config.sdkUrl, world.apiKey);
   if (state.step !== 'authenticated') throw new Error(`login ended in ${JSON.stringify(state)}`);
   world.sdk = client;
   world.walletAddress = address;
+  world.walletKeypair = keypair;
 }
 
 When('a new Stellar wallet logs in with the SDK', async function (this: E2EWorld) {

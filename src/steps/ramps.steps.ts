@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { Then, When } from '@cucumber/cucumber';
+import { trustTestnetAsset } from '../clients/horizon.js';
 import type { E2EWorld } from '../support/world.js';
 
 type Direction = 'ONRAMP' | 'OFFRAMP';
@@ -34,6 +35,11 @@ Then(
       const label = `${name} ${direction.toLowerCase()} ${code}/${route?.fiat.currency ?? '?'}`;
       try {
         if (!route) throw new Error(`no ${direction.toLowerCase()} route to ${code}`);
+        // An onramp delivers an issued asset, which the wallet must trust first.
+        if (direction === 'ONRAMP' && route.asset.chain === 'STELLAR' && route.asset.identifier) {
+          await trustTestnetAsset(this.requireWalletKeypair(), route.asset.code, route.asset.identifier);
+          this.log(`${label}: wallet trusts ${route.asset.code}`);
+        }
         const { kind: _f, ...fiat } = route.fiat;
         const { kind: _a, ...asset } = route.asset;
         const { quotes } = await sdk.quoteRamp({ direction, fiat, asset, amount: { value: '10', denomination: 'in' } });
