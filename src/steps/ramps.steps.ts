@@ -41,7 +41,9 @@ Then(
         if (own.length === 0) throw new Error(`no quote with a provider leg (${quotes.length} quotes)`);
         this.log(`${label}: ${own[0].amountIn} in → ${own[0].amountOut} out via ${fiat.rail}`);
       } catch (e) {
-        failures.push(`${label}: ${(e as Error).message}`);
+        // A quote that found no route says why each route dropped out.
+        const rejected = (e as { body?: { rejected?: unknown } }).body?.rejected;
+        failures.push(`${label}: ${(e as Error).message}${rejected ? ` ${JSON.stringify(rejected)}` : ''}`);
       }
     }
     assert.deepEqual(failures, [], `quotes failed:\n${failures.join('\n')}`);
