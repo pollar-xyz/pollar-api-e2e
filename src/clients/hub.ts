@@ -30,15 +30,6 @@ export function hubClient(baseUrl: string, pat: string) {
         allow_native_clients: true,
       }),
     listUsers: async (appId: string) => (await call<{ items: AppUser[] }>('GET', `/applications/${appId}/users`)).items,
-    /** The app's own Stellar wallet, the one that sponsors its users. */
-    appWallet: async (appId: string) => {
-      const wallets = (await call<{ items: AppWallet[] }>('GET', `/applications/${appId}/wallets`)).items;
-      const own = wallets.find((w) => w.type === 'application' && w.network === 'STELLAR');
-      if (!own) throw new Error(`app ${appId} has no Stellar wallet of its own`);
-      return own;
-    },
-    fundWithTestnetFriendbot: (appId: string, publicKey: string) =>
-      call('POST', `/applications/${appId}/testnet-friendbot-wallet`, { publicKey }),
     listWallets: async (appId: string) => (await call<{ items: AppWallet[] }>('GET', `/applications/${appId}/wallets`)).items,
     /** The global catalog: every ramp provider registered in this environment. */
     rampCatalog: async () => (await call<{ providers: RampProvider[] }>('GET', '/ramp-providers')).providers,

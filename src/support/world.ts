@@ -15,7 +15,6 @@ export class E2EWorld extends World {
   sdk?: PollarClient;
   walletAddress?: string;
   walletKeypair?: Keypair;
-  appWalletAddress?: string;
   countries: Array<{ code: string; currency: string | null }> = [];
   routes: Record<'ONRAMP' | 'OFFRAMP', RampRoute[]> = { ONRAMP: [], OFFRAMP: [] };
 
