@@ -18,8 +18,8 @@ function environmentOf(name: string, url: string): Environment {
   return env;
 }
 
-const hubUrl = (process.env.E2E_HUB_URL || 'https://hub-api.pollar.dev').replace(/\/$/, '');
-const sdkUrl = (process.env.E2E_SDK_URL || 'https://sdk-api.pollar.dev').replace(/\/$/, '');
+const hubUrl = (process.env.E2E_HUB_URL || 'https://hub.api.dev.pollar.dev').replace(/\/$/, '');
+const sdkUrl = (process.env.E2E_SDK_URL || 'https://sdk.api.dev.pollar.dev').replace(/\/$/, '');
 const env = environmentOf('E2E_HUB_URL', hubUrl);
 if (environmentOf('E2E_SDK_URL', sdkUrl) !== env)
   throw new Error('E2E_HUB_URL and E2E_SDK_URL point at different environments');
