@@ -36,17 +36,16 @@ Then('at least one ramp provider is registered for the app network', async funct
   const network = this.requireApp().network;
   const catalog = await this.hub.rampCatalog();
   const usable = catalog.filter((p) => p.network === network);
-  this.log(`catalog: ${catalog.map((p) => `${p.name} (${p.network})`).join(', ') || 'empty'}`);
+  // Counts only: the run logs are public, and the catalog lists providers not yet announced.
+  this.log(`catalog: ${catalog.length} providers, ${usable.length} on ${network}`);
   assert.ok(usable.length > 0, `no ramp provider registered for ${network}`);
 });
 
 Given('the app enables every ramp provider registered for its network', async function (this: E2EWorld) {
   const app = this.requireApp();
   const usable = (await this.hub.rampCatalog()).filter((p) => p.network === app.network);
-  for (const p of usable) {
-    await this.hub.enableRampProvider(app.id, p.id);
-    this.log(`enabled ${p.name}`);
-  }
+  for (const p of usable) await this.hub.enableRampProvider(app.id, p.id);
+  this.log(`enabled ${usable.length} providers`);
 });
 
 Given('the {string} ramp provider is registered for the app network', async function (this: E2EWorld, name: string) {
