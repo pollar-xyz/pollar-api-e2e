@@ -37,7 +37,7 @@ concurrency:
 jobs:
   e2e:
     name: e2e (${{ matrix.env }})
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -96,7 +96,7 @@ jobs:
   report:
     needs: e2e
     if: always()
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
