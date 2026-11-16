@@ -4,6 +4,7 @@
 export type HubApp = { id: string; name: string; network: string };
 export type RampProvider = { id: string; name: string; network: string };
 export type AppUser = { id: string; providers: string[]; wallets: Array<{ network: string; public_key: string }> };
+export type RampMethod = { direction: 'ONRAMP' | 'OFFRAMP'; country: string; fiatCurrency: string; rail: string; enabled: boolean };
 export type AppWallet = { public_key: string; network: string; type: string };
 
 export function hubClient(baseUrl: string, pat: string) {
@@ -35,6 +36,11 @@ export function hubClient(baseUrl: string, pat: string) {
     rampCatalog: async () => (await call<{ providers: RampProvider[] }>('GET', '/ramp-providers')).providers,
     enableRampProvider: (appId: string, rampProviderId: string) =>
       call('POST', `/applications/${appId}/ramp-providers`, { rampProviderId }),
+    /** The methods (direction + country + fiat + rail) the app can turn on. Pollar picks the provider. */
+    listRampMethods: async (appId: string) =>
+      (await call<{ methods: RampMethod[] }>('GET', `/applications/${appId}/ramps/methods`)).methods,
+    setRampMethod: (appId: string, { direction, country, fiatCurrency, rail }: RampMethod, enabled: boolean) =>
+      call<RampMethod>('PUT', `/applications/${appId}/ramps/methods`, { direction, country, fiatCurrency, rail, enabled }),
   };
 }
 

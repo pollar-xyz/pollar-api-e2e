@@ -65,3 +65,13 @@ Given('the app enables the {string} ramp provider', async function (this: E2EWor
   assert.equal(provider.name, name);
   await this.hub.enableRampProvider(this.requireApp().id, provider.id);
 });
+
+// A corridor serves an app only when the app turns its method on, so the
+// country's ramps stay hidden until then.
+Given('the app turns on its ramp methods in {string}', async function (this: E2EWorld, country: string) {
+  const app = this.requireApp();
+  const methods = (await this.hub.listRampMethods(app.id)).filter((m) => m.country === country);
+  assert.ok(methods.length > 0, `no ramp method offered in ${country} on ${app.network}`);
+  for (const m of methods) await this.hub.setRampMethod(app.id, m, true);
+  this.log(`methods on: ${methods.map((m) => `${m.direction.toLowerCase()} ${m.fiatCurrency}/${m.rail}`).join(', ')}`);
+});

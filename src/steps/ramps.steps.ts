@@ -23,8 +23,8 @@ Then('{string} is among the ramp countries', function (this: E2EWorld, code: str
   );
 });
 
-// Quotes no longer name the provider. The scenario's app enables a single
-// provider, so a quote with a provider leg is that provider's.
+// Quotes no longer name the provider, and Pollar picks it among the corridors
+// of the methods the app turned on: any quote with a provider leg counts.
 Then(
   /^"([^"]+)" quotes (onramp|offramp|onramp and offramp) in "([A-Z]{2})"$/,
   async function (this: E2EWorld, name: string, directions: string, code: string) {
