@@ -12,6 +12,7 @@ Feature: End user ramps with the published SDK
     Given a new app with a publishable key
     And the "<provider>" ramp provider is registered for the app network
     And the app enables the "<provider>" ramp provider
+    And the app turns on its ramp methods in "<country>"
     And a new Stellar wallet is logged in with the SDK
     When the user lists the ramp countries
     Then "<country>" is among the ramp countries

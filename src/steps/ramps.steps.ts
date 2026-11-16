@@ -23,40 +23,50 @@ Then('{string} is among the ramp countries', function (this: E2EWorld, code: str
   );
 });
 
-// Quotes no longer name the provider. The scenario's app enables a single
-// provider, so a quote with a provider leg is that provider's.
+// Quotes no longer name the provider, and Pollar picks it among the corridors
+// of the methods the app turned on: any quote with a provider leg counts.
 Then(
   /^"([^"]+)" quotes (onramp|offramp|onramp and offramp) in "([A-Z]{2})"$/,
   async function (this: E2EWorld, name: string, directions: string, code: string) {
     const sdk = this.requireSdk();
     const failures: string[] = [];
     for (const direction of directions.toUpperCase().split(' AND ') as Direction[]) {
-      const route = this.routes[direction].find((r) => r.fiat.country === code);
-      const label = `${name} ${direction.toLowerCase()} ${code}/${route?.fiat.currency ?? '?'}`;
-      try {
-        if (!route) throw new Error(`no ${direction.toLowerCase()} route to ${code}`);
-        // An onramp delivers an issued asset, which the wallet must trust first.
-        if (direction === 'ONRAMP' && route.asset.chain === 'STELLAR' && route.asset.identifier) {
-          await trustTestnetAsset(this.requireWalletKeypair(), route.asset.code, route.asset.identifier);
-          this.log(`${label}: wallet trusts ${route.asset.code}`);
+      const routes = this.routes[direction].filter((r) => r.fiat.country === code);
+      if (!routes.length) failures.push(`${name} ${direction.toLowerCase()} ${code}: no route`);
+      // The catalog may list a route the provider no longer serves: one that quotes is enough.
+      const tried: string[] = [];
+      for (const route of routes) {
+        const label = `${name} ${direction.toLowerCase()} ${code}/${route.fiat.currency}`;
+        try {
+          // An onramp delivers an issued asset, which the wallet must trust first.
+          if (direction === 'ONRAMP' && route.asset.chain === 'STELLAR' && route.asset.identifier) {
+            await trustTestnetAsset(this.requireWalletKeypair(), route.asset.code, route.asset.identifier);
+            this.log(`${label}: wallet trusts ${route.asset.code}`);
+          }
+          const { kind: _f, ...fiat } = route.fiat;
+          const { kind: _a, ...asset } = route.asset;
+          const { quotes } = await sdk.quoteRamp({ direction, fiat, asset, amount: { value: '10', denomination: 'in' } });
+          const own = quotes.filter((q) => q.legs.some((l) => l.kind === `PROVIDER_${direction}`));
+          if (own.length === 0) throw new Error(`no quote with a provider leg (${quotes.length} quotes)`);
+          this.log(`${label}: ${own[0].amountIn} in → ${own[0].amountOut} out via ${fiat.rail}`);
+          tried.length = 0;
+          break;
+        } catch (e) {
+          // A quote that found no route says why each route dropped out.
+          const rejected = (e as { body?: { rejected?: Array<{ failure: { code: string } }> } }).body?.rejected;
+          // New apps ramp only in COSIGNED mode and only a Pollar admin enables EXTERNAL,
+          // so an external wallet's offramp reaching the provider and stopping there is expected.
+          if (direction === 'OFFRAMP' && rejected?.length && rejected.every((r) => r.failure.code === 'SIGNING_MODE_NOT_ALLOWED')) {
+            this.log(`${label}: refused SIGNING_MODE_NOT_ALLOWED (external wallet, app allows COSIGNED only)`);
+            tried.length = 0;
+            break;
+          }
+          const why = `${label}: ${(e as Error).message}${rejected ? ` ${JSON.stringify(rejected)}` : ''}`;
+          this.log(why);
+          tried.push(why);
         }
-        const { kind: _f, ...fiat } = route.fiat;
-        const { kind: _a, ...asset } = route.asset;
-        const { quotes } = await sdk.quoteRamp({ direction, fiat, asset, amount: { value: '10', denomination: 'in' } });
-        const own = quotes.filter((q) => q.legs.some((l) => l.kind === `PROVIDER_${direction}`));
-        if (own.length === 0) throw new Error(`no quote with a provider leg (${quotes.length} quotes)`);
-        this.log(`${label}: ${own[0].amountIn} in → ${own[0].amountOut} out via ${fiat.rail}`);
-      } catch (e) {
-        // A quote that found no route says why each route dropped out.
-        const rejected = (e as { body?: { rejected?: Array<{ failure: { code: string } }> } }).body?.rejected;
-        // New apps ramp only in COSIGNED mode and only a Pollar admin enables EXTERNAL,
-        // so an external wallet's offramp reaching the provider and stopping there is expected.
-        if (direction === 'OFFRAMP' && rejected?.length && rejected.every((r) => r.failure.code === 'SIGNING_MODE_NOT_ALLOWED')) {
-          this.log(`${label}: refused SIGNING_MODE_NOT_ALLOWED (external wallet, app allows COSIGNED only)`);
-          continue;
-        }
-        failures.push(`${label}: ${(e as Error).message}${rejected ? ` ${JSON.stringify(rejected)}` : ''}`);
       }
+      failures.push(...tried);
     }
     assert.deepEqual(failures, [], `quotes failed:\n${failures.join('\n')}`);
   },
